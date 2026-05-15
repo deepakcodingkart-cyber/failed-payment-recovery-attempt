@@ -1,26 +1,44 @@
-const LOG_LEVEL = process.env.LOG_LEVEL || "INFO";
-const LEVELS = ["DEBUG", "INFO", "WARN", "ERROR"];
+/* ======================================================
+   LOGGER
+====================================================== */
+class Logger {
+  constructor() {
+    this.LOG_LEVEL = process.env.LOG_LEVEL || "INFO";
+    this.LEVELS = ["DEBUG", "INFO", "WARN", "ERROR"];
+  }
 
-function canLog(level) {
-  return LEVELS.indexOf(level) >= LEVELS.indexOf(LOG_LEVEL);
+  canLog(level) {
+    return this.LEVELS.indexOf(level) >= this.LEVELS.indexOf(this.LOG_LEVEL);
+  }
+
+  log(level, payload) {
+    if (!this.canLog(level)) return;
+
+    console.log(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level,
+        requestId: payload.requestId,
+        ...payload,
+      })
+    );
+  }
+
+  debug(p) {
+    this.log("DEBUG", p);
+  }
+
+  info(p) {
+    this.log("INFO", p);
+  }
+
+  warn(p) {
+    this.log("WARN", p);
+  }
+
+  error(p) {
+    this.log("ERROR", p);
+  }
 }
 
-function log(level, payload) {
-  if (!canLog(level)) return;
-
-  console.log(
-    JSON.stringify({
-      timestamp: new Date().toISOString(),
-      level,
-      requestId: payload.requestId,
-      ...payload,
-    })
-  );
-}
-
-export const logger = {
-  debug: (p) => log("DEBUG", p),
-  info: (p) => log("INFO", p),
-  warn: (p) => log("WARN", p),
-  error: (p) => log("ERROR", p),
-};
+export const logger = new Logger();

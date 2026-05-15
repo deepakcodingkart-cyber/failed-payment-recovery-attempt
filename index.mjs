@@ -1,4 +1,4 @@
-import { processRecoveryMessage } from "./retryWorker.mjs";
+import { retryWorker } from "./services/retryWorker.mjs";
 import { logger } from "./logger.mjs";
 import dotenv from "dotenv";
 
@@ -17,7 +17,7 @@ export const handler = async (event, context) => {
   try {
     for (const record of event.Records) {
       const body = JSON.parse(record.body);
-      
+
       // Check if it's a nested batch (100 records) or a single legacy message
       const recordsToProcess = body.records || [body];
       const batchId = body.batchId || "N/A";
@@ -34,8 +34,8 @@ export const handler = async (event, context) => {
       for (const msg of recordsToProcess) {
         try {
           // Har individual recovery record ko process karenge
-          console.log("Processing recovery message:", msg)
-          await processRecoveryMessage(msg);
+          console.log("Processing recovery message:", msg);
+          await retryWorker.process(msg);
 
           logger.info({
             service: "retry-worker",
@@ -43,7 +43,6 @@ export const handler = async (event, context) => {
             recoveryId: msg.recoveryId,
             requestId,
           });
-
         } catch (recordErr) {
           // Ek record fail ho toh pura batch fail nahi karna chahiye
           // Hum sirf log karenge aur aage badhenge
@@ -54,8 +53,8 @@ export const handler = async (event, context) => {
             error: recordErr.message,
             requestId,
           });
-          
-          // Note: Agar aap chahte ho ki SQS message retry ho, 
+
+          // Note: Agar aap chahte ho ki SQS message retry ho,
           // toh yahan throw err karna padega, lekin wo poore 100 records ko retry karega.
         }
       }
@@ -77,7 +76,6 @@ export const handler = async (event, context) => {
       statusCode: 200,
       body: JSON.stringify({ success: true }),
     };
-
   } catch (error) {
     logger.error({
       service: "retry-worker",
