@@ -1,5 +1,6 @@
 import { retryWorker } from "./services/retryWorker.mjs";
 import { logger } from "./logger.mjs";
+import { statusCodes } from "./utils/constant.mjs";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -79,7 +80,7 @@ export const handler = async (event, context) => {
     });
 
     return {
-      statusCode: 200,
+      statusCode: statusCodes.OK,
       body: JSON.stringify({ success: true }),
     };
   } catch (error) {
