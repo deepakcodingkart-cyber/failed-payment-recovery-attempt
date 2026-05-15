@@ -42,22 +42,6 @@ async function getShopAccessToken(shop_id) {
 
   // return res.rows[0].access_token;
 
-  let access_token;
-
-  // Hardcoded logic based on shop_id
-  if (shop_id === 'driftcharge-test1.myshopify.com') {
-    access_token = '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';
-  } else if (shop_id === 'checkout-ui-build.myshopify.com') {
-    access_token = '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';
-  } else {
-    // Default ya Error handling
-    console.error("Unknown shop_id:", shop_id);
-  }
-
-  // Ab aap 'access_token' variable ko aage use kar sakte hain
-  console.log("Using Token:", access_token);
-  return access_token;
-}
 
 /* ===============================
    ATTEMPT BILLING CHARGE
