@@ -21,8 +21,11 @@ export class RetryWorker {
     } = msg;
 
     logger.info({
+      service: "retry-worker",
       step: "PROCESS_MESSAGE_START",
       recoveryId,
+      shop_id,
+      subscription_id,
       attemptNumber,
       action,
     });
@@ -31,19 +34,34 @@ export class RetryWorker {
     const state = await repository.validateRecoveryState(recoveryId);
 
     if (!state || state.status !== "PENDING" || !state.queued_at) {
-      logger.warn({ step: "SKIP_INVALID_STATE", recoveryId, state });
+      logger.warn({
+        service: "retry-worker",
+        step: "SKIP_INVALID_STATE",
+        recoveryId,
+        state,
+        message: "Record skipped — not PENDING or not queued",
+      });
       return;
     }
 
     if (state.attempt_count !== attemptNumber - 1) {
       logger.warn({
+        service: "retry-worker",
         step: "ATTEMPT_MISMATCH",
         recoveryId,
-        db: state.attempt_count,
-        msg: attemptNumber,
+        dbAttemptCount: state.attempt_count,
+        msgAttemptNumber: attemptNumber,
+        message: "DB attempt_count does not match message attemptNumber - 1",
       });
       return;
     }
+
+    logger.debug({
+      service: "retry-worker",
+      step: "DB_VALIDATION_PASS",
+      recoveryId,
+      state,
+    });
 
     /* ---------- 2. EXECUTION ---------- */
     try {
@@ -65,6 +83,12 @@ export class RetryWorker {
           fallback_action,
         });
 
+        logger.info({
+          service: "retry-worker",
+          step: "PROCESS_MESSAGE_END",
+          recoveryId,
+          action: "FALLBACK",
+        });
         return;
       }
 
@@ -106,11 +130,24 @@ export class RetryWorker {
         recoveryId,
         nextAttemptDays: retry_interval_days,
       });
+
+      logger.info({
+        service: "retry-worker",
+        step: "PROCESS_MESSAGE_END",
+        recoveryId,
+        action: "RETRY",
+      });
     } catch (err) {
       logger.error({
+        service: "retry-worker",
         step: "PROCESS_EXECUTION_FAILED",
         recoveryId,
+        shop_id,
+        subscription_id,
+        attemptNumber,
+        action,
         error: err.message,
+        err,
       });
 
       // Error throw kar rahe hain taaki main handler ko pata chale

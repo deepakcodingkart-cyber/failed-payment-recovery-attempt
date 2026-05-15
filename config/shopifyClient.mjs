@@ -1,3 +1,5 @@
+import { logger } from "../logger.mjs";
+
 /* ======================================================
    SHOPIFY GRAPHQL CLIENT
 ====================================================== */
@@ -26,6 +28,13 @@ export class ShopifyClient {
     const json = await res.json();
 
     if (json.errors) {
+      logger.error({
+        service: "shopify-client",
+        step: "GRAPHQL_TRANSPORT_ERROR",
+        shop: this.shop,
+        status: res.status,
+        errors: json.errors,
+      });
       const err = new Error("Shopify GraphQL Error");
       err.details = json.errors;
       throw err;

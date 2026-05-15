@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const handler = async (event, context) => {
+  logger.setLambdaContext(context);
   const requestId = context?.awsRequestId || "local";
 
   logger.info({
@@ -34,7 +35,12 @@ export const handler = async (event, context) => {
       for (const msg of recordsToProcess) {
         try {
           // Har individual recovery record ko process karenge
-          console.log("Processing recovery message:", msg);
+          logger.debug({
+            service: "retry-worker",
+            step: "PROCESSING_RECOVERY_MESSAGE",
+            recoveryId: msg.recoveryId,
+            msg,
+          });
           await retryWorker.process(msg);
 
           logger.info({

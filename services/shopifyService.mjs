@@ -34,6 +34,17 @@ export class ShopifyService {
 
     const accessToken = await repository.getAccessToken(shop_id);
 
+    if (!accessToken) {
+      logger.error({
+        service: "shopify-billing",
+        step: "MISSING_ACCESS_TOKEN",
+        shop_id,
+        subscription_id,
+        message: "Cannot attempt charge — no access token available for shop",
+      });
+      throw new Error(`No access token for shop: ${shop_id}`);
+    }
+
     const shopifyClient = getShopifyClient({
       shop: shop_id,
       accessToken,
@@ -112,6 +123,18 @@ export class ShopifyService {
     });
 
     const accessToken = await repository.getAccessToken(shop_id);
+
+    if (!accessToken) {
+      logger.error({
+        service: "shopify-billing",
+        step: "MISSING_ACCESS_TOKEN",
+        shop_id,
+        subscription_id,
+        message: "Cannot pause — no access token available for shop",
+      });
+      throw new Error(`No access token for shop: ${shop_id}`);
+    }
+
     const shopifyClient = getShopifyClient({ shop: shop_id, accessToken });
 
     const data = await shopifyClient.request(SUBSCRIPTION_CONTRACT_PAUSE, {
@@ -123,6 +146,8 @@ export class ShopifyService {
       logger.error({
         service: "shopify-billing",
         step: "PAUSE_ERROR",
+        shop_id,
+        subscription_id,
         error: result.userErrors[0],
       });
       throw new Error(result.userErrors[0].message);
@@ -148,6 +173,18 @@ export class ShopifyService {
     });
 
     const accessToken = await repository.getAccessToken(shop_id);
+
+    if (!accessToken) {
+      logger.error({
+        service: "shopify-billing",
+        step: "MISSING_ACCESS_TOKEN",
+        shop_id,
+        subscription_id,
+        message: "Cannot cancel — no access token available for shop",
+      });
+      throw new Error(`No access token for shop: ${shop_id}`);
+    }
+
     const shopifyClient = getShopifyClient({ shop: shop_id, accessToken });
 
     const data = await shopifyClient.request(SUBSCRIPTION_CONTRACT_CANCEL, {
@@ -159,6 +196,8 @@ export class ShopifyService {
       logger.error({
         service: "shopify-billing",
         step: "CANCEL_ERROR",
+        shop_id,
+        subscription_id,
         error: result.userErrors[0],
       });
       throw new Error(result.userErrors[0].message);
@@ -185,6 +224,19 @@ export class ShopifyService {
     });
 
     const accessToken = await repository.getAccessToken(shop_id);
+
+    if (!accessToken) {
+      logger.error({
+        service: "shopify-billing",
+        step: "MISSING_ACCESS_TOKEN",
+        shop_id,
+        subscription_id,
+        billingCycleIndex,
+        message: "Cannot skip cycle — no access token available for shop",
+      });
+      throw new Error(`No access token for shop: ${shop_id}`);
+    }
+
     const shopifyClient = getShopifyClient({ shop: shop_id, accessToken });
 
     const data = await shopifyClient.request(SUBSCRIPTION_BILLING_CYCLE_SKIP, {
@@ -201,6 +253,9 @@ export class ShopifyService {
       logger.error({
         service: "shopify-billing",
         step: "SKIP_ERROR",
+        shop_id,
+        subscription_id,
+        billingCycleIndex,
         error: result.userErrors[0],
       });
       throw new Error(result.userErrors[0].message);

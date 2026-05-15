@@ -23,3 +23,16 @@ export const RECOVERY_ACTION = {
   RETRY: "RETRY",
   FALLBACK: "FALLBACK",
 };
+
+/* ======================================================
+   PINO LEVEL -> OTEL SEVERITY NUMBER
+   https://opentelemetry.io/docs/specs/otel/logs/data-model/#field-severitynumber
+====================================================== */
+export const PINO_TO_OTEL_SEVERITY = {
+  trace: 1,
+  debug: 5,
+  info:  9,
+  warn:  13,
+  error: 17,
+  fatal: 21,
+};

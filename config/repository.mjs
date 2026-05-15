@@ -21,7 +21,12 @@ export class Repository {
         database: process.env.DRIFCHARGE_BILLING_DATABAE,
       });
       await this.client.connect();
-      console.log("✅ Connected to PostgreSQL");
+      logger.info({
+        service: "recovery-repository",
+        step: "PG_CONNECTED",
+        host: process.env.PG_HOST,
+        database: process.env.DRIFCHARGE_BILLING_DATABAE,
+      });
     }
     return this.client;
   }
