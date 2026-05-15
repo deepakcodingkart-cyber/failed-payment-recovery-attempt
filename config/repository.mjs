@@ -27,6 +27,39 @@ export class Repository {
   }
 
   /* ===============================
+     GET ACCESS TOKEN
+  ================================ */
+  async getAccessToken(shopDomain) {
+    if (!shopDomain) {
+      logger.warn({
+        service: "recovery-queries",
+        step: "GET_ACCESS_TOKEN",
+        message: "No shopDomain provided",
+      });
+      return null;
+    }
+
+    const client = await this.getClient();
+
+    const result = await client.query(
+      `SELECT "accessToken" FROM "Session" WHERE "shop" = $1 LIMIT 1`,
+      [shopDomain]
+    );
+
+    if (!result?.rows?.length) {
+      logger.error({
+        service: "recovery-queries",
+        step: "RETRIEVE_DB_SESSION",
+        shopDomain,
+        message: "Session not found — invalid shop or app uninstalled",
+      });
+      return null;
+    }
+
+    return result.rows[0].accessToken;
+  }
+
+  /* ===============================
      Validation
   ================================ */
   async validateRecoveryState(recoveryId) {
