@@ -15,7 +15,9 @@ export class RetryWorker {
       billing_cycle_index,
       billing_date,
       attemptNumber,
+      max_attempts,
       retry_interval_days,
+      grace_period_days,
       fallback_action,
       action,
     } = msg;
@@ -119,16 +121,21 @@ export class RetryWorker {
       });
 
       // AGAR CHARGE SUCCESS HUA: Tabhi DB update karo
+      // Last retry ke baad grace period use karo, warna normal retry interval
+      const isLastRetry = attemptNumber >= max_attempts;
+      const nextDelayDays = isLastRetry ? grace_period_days : retry_interval_days;
+
       await repository.updateRecoveryAfterAttempt({
         recoveryId: recoveryId,
-        retryIntervalDays: retry_interval_days,
+        nextDelayDays,
       });
 
       logger.info({
         service: "retry-worker",
         step: "DB_STATE_UPDATED",
         recoveryId,
-        nextAttemptDays: retry_interval_days,
+        nextAttemptDays: nextDelayDays,
+        isLastRetry,
       });
 
       logger.info({

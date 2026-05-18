@@ -84,15 +84,17 @@ export class Repository {
 
   /* ===============================
      UPDATE AFTER RETRY ATTEMPT
+     `nextDelayDays` is either retry_interval_days (normal retry)
+     or grace_period_days (after last retry, before fallback fires)
   ================================ */
-  async updateRecoveryAfterAttempt({ recoveryId, retryIntervalDays }) {
+  async updateRecoveryAfterAttempt({ recoveryId, nextDelayDays }) {
     const client = await this.getClient();
 
     logger.info({
       service: "recovery-queries",
       step: "UPDATE_RECOVERY_AFTER_ATTEMPT_START",
       recoveryId,
-      retryIntervalDays,
+      nextDelayDays,
     });
 
     await client.query(
@@ -106,7 +108,7 @@ export class Repository {
       WHERE id = $1
       AND status = 'PENDING'
       `,
-      [recoveryId, retryIntervalDays]
+      [recoveryId, nextDelayDays]
     );
 
     logger.info({
