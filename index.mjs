@@ -1,9 +1,13 @@
 import { retryWorker } from "./services/retryWorker.mjs";
 import { logger } from "./logger.mjs";
 import { statusCodes } from "./utils/constant.mjs";
+import { initSentry, sendSentryError } from "./utils/sentry.mjs";
 import dotenv from "dotenv";
 
 dotenv.config();
+
+// Singleton — reused across Lambda invocations
+initSentry();
 
 export const handler = async (event, context) => {
   logger.setLambdaContext(context);
@@ -91,6 +95,8 @@ export const handler = async (event, context) => {
       error: error.message,
       stack: error.stack,
     });
+
+    await sendSentryError(error);
 
     // Throwing here will make the WHOLE SQS batch visible again
     throw error;
